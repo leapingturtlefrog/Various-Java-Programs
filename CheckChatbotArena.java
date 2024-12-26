@@ -17,7 +17,7 @@ public class CheckChatbotArena {
         Random random = new Random();
         while (true) {
             URL url = new URI(URL_STRING).toURL();
-            long startTime = System.currentTimeMillis();
+            //long startTime = System.currentTimeMillis();
             HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
             connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36");
             connection.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
@@ -28,7 +28,7 @@ public class CheckChatbotArena {
             connection.setRequestProperty("Sec-Fetch-Mode", "navigate");
             connection.setRequestProperty("Sec-Fetch-Site", "same-origin");
             String raw_html = new String(connection.getInputStream().readAllBytes());
-            double time = (System.currentTimeMillis() - startTime) / 1000.0;
+            //double time = (System.currentTimeMillis() - startTime) / 1000.0;
             String lastUpdated = raw_html.substring(
                     raw_html.indexOf("lastModified&quot;:&quot;2024-") + 25,
                     raw_html.indexOf("Z&quot;,&quot;likes&quot"));
