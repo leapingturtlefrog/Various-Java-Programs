@@ -1,52 +1,27 @@
-import javax.net.ssl.HttpsURLConnection;
+import java.awt.Font;
+import java.io.File;
 import java.net.URI;
 import java.net.URL;
 import java.util.Date;
 import java.util.Random;
-import javax.swing.JPanel;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import java.awt.Font;
+import javax.net.ssl.HttpsURLConnection;
+import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.SourceDataLine;
-import javax.sound.sampled.Mixer;
-import java.io.File;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 
 public class CheckChatbotArena {
     private final static String URL_STRING = "https://huggingface.co/spaces/lmarena-ai/chatbot-arena-leaderboard"; //"https://www.lmarena.ai";
     private final static int AVERAGE_WAIT_TIME = 150; //s
     private final static int WAIT_TIME_STD_DEV = 150; //s
-    private final static String SOUND_FILE_PATH = "/mnt/c/Users/alexa/Downloads/alarm.wav";
+    private final static String SOUND_FILE_PATH = "C:/Users/alexa/Downloads/alarm.wav";
     public static String lastModified = "2024-12-23T11:00:26.000";
     
     public static void main(String[] args) throws Exception {
-        Mixer.Info[] m = AudioSystem.getMixerInfo();
-        System.out.println(m.length);
-        for (Mixer.Info n: m) {
-            System.out.println(n.getDescription());
-        }
-        SourceDataLine audioLine = null;
-        AudioInputStream convertedStream = null;
-        try {
-            File soundFile = new File(SOUND_FILE_PATH);
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
-            AudioFormat baseFormat = audioStream.getFormat();
-            AudioFormat targetFormat = new AudioFormat(
-                AudioFormat.Encoding.PCM_SIGNED,
-                44100,
-                16,
-                baseFormat.getChannels(),
-                baseFormat.getChannels() * 2,
-                44100,
-                false
-            );
-            convertedStream = AudioSystem.getAudioInputStream(targetFormat, audioStream);
-            DataLine.Info info = new DataLine.Info(SourceDataLine.class, targetFormat);
-            audioLine = (SourceDataLine) AudioSystem.getLine(info);
-            audioLine.open(targetFormat);
             Random random = new Random();
             while (true) {
                 URL url = new URI(URL_STRING).toURL();
@@ -74,16 +49,10 @@ public class CheckChatbotArena {
                     String message = "<html>IMPORTANT ALERT.<br>NOTIFY ALEX NOW!!<br><br>Update has changed:<br>" 
                             + lastModified + "<br><br>IMPORTANT ALERT.<br>NOTIFY ALEX NOW!!</html>";
                     System.out.println(message.replaceAll("<br>", "\n"));
-                    JLabel label = new JLabel(message);
-                    label.setFont(new Font("Arial", Font.BOLD, 120));
-                    JPanel panel = new JPanel();
-                    panel.add(label);
-                    JOptionPane.showMessageDialog(null, panel, "NOTIFY ALEX NOW!!", JOptionPane.INFORMATION_MESSAGE);
-                    audioLine.start();
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-                    while ((bytesRead = convertedStream.read(buffer)) != -1) {
-                        audioLine.write(buffer, 0, bytesRead);
+                    while (true) {
+                        new Thread(() -> playAudio(SOUND_FILE_PATH)).start();
+                        new Thread(() -> showLabel(message)).start();
+                        Thread.sleep(70000);
                     }
                 }
                 Thread.sleep(((long) Math.clamp(
@@ -91,14 +60,56 @@ public class CheckChatbotArena {
                         Math.clamp(Math.random() * 20, 10, 60), 480))
                         * 1000);
             }
+        
+    }
+    
+    public static void playAudio(String soundFilePath) {
+        SourceDataLine audioLine = null;
+        AudioInputStream convertedStream = null;
+        try {
+            File soundFile = new File(soundFilePath);
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(soundFile);
+            AudioFormat baseFormat = audioStream.getFormat();
+            AudioFormat targetFormat = new AudioFormat(
+                AudioFormat.Encoding.PCM_SIGNED,
+                44100,
+                16,
+                baseFormat.getChannels(),
+                baseFormat.getChannels() * 2,
+                44100,
+                false
+            );
+            convertedStream = AudioSystem.getAudioInputStream(targetFormat, audioStream);
+            DataLine.Info info = new DataLine.Info(SourceDataLine.class, targetFormat);
+            audioLine = (SourceDataLine) AudioSystem.getLine(info);
+            audioLine.open(targetFormat);
+            audioLine.start();
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = convertedStream.read(buffer)) != -1) {
+                audioLine.write(buffer, 0, bytesRead);
+            }
+        } catch (Exception e) {
+            System.out.println("Audio failed.");
         } finally {
             if (audioLine != null) {
                 audioLine.drain();
                 audioLine.close();
             }
-            if (convertedStream != null) {
-                convertedStream.close();
+            try {
+                if (convertedStream != null) {
+                    convertedStream.close();
+                }
+            } catch (Exception e) {
             }
         }
+    }
+    
+    public static void showLabel(String message) {
+        JLabel label = new JLabel(message);
+        label.setFont(new Font("Arial", Font.BOLD, 120));
+        JPanel panel = new JPanel();
+        panel.add(label);
+        JOptionPane.showMessageDialog(null, panel, "NOTIFY ALEX NOW!!", JOptionPane.INFORMATION_MESSAGE);
     }
 }
