@@ -5,15 +5,17 @@ import subprocess
 import time
 import os
 import zipfile
+import sys
 
 FIREFOX_PROFILE_D = '/home/alexa/.mozilla/firefox/sebcv9x3.default-default-6'
 
 destination_d = '/mnt/c/Users/alexa/c/cs1332/src/test/java'
-urls = '''https://github.gatech.edu/gist/vparikh35/1fb55eafbfbdc3147cf11eacc6bfa77a
-https://github.gatech.edu/gist/vparikh35/b330c3692a911e60b1dbeee6c0a56a4b
-https://github.gatech.edu/gist/vparikh35/306289a872c47477c4c956846305c711
-https://github.gatech.edu/gist/vparikh35/0d8b81d26610c5d11e4cd59d897b1db5
-https://github.gatech.edu/gist/vparikh35/4a1d1271f56c8f4e9969b77b71a6412e'''
+urls = []
+
+if len(sys.argv) > 1:
+    urls = sys.argv[1:]
+elif not len(urls) > 0:
+    exit(1)
 
 with sync_playwright() as p:
     browser = p.firefox.launch_persistent_context(
@@ -22,7 +24,7 @@ with sync_playwright() as p:
     )
     page = browser.new_page()
     browser.pages[0].close()
-    for url in urls.split('\n'):
+    for url in urls:
         page.goto(url)
         page.wait_for_timeout(3000)
         
